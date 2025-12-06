@@ -157,4 +157,4 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
 
 LazyList.displayName = "LazyList";
 
-export default memo(LazyList);
+export default LazyList;
