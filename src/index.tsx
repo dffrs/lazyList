@@ -12,26 +12,16 @@ import {
   useState,
   useTransition,
 } from "react";
+import { findOverflowingParent } from "./util";
 
-const findParent = (
-  el: HTMLElement | null,
-  predicate: (parentElement: HTMLElement | null) => boolean,
-) => {
-  while (el?.parentElement) {
-    el = el.parentElement;
-    if (predicate(el)) return el;
-  }
-  return null;
-};
-const isOverflowing = (element: HTMLElement | null) =>
-  (element && element.scrollHeight > element.clientHeight) || false;
-interface ScrollerProps extends HTMLProps<HTMLUListElement> {
+type LazyListProps = {
   elementsRendered?: number;
   increment?: number;
   fallback?: ReactNode;
   backup?: (fn: () => void) => void;
-}
-const LazyList: FunctionComponent<PropsWithChildren<ScrollerProps>> = ({
+} & HTMLProps<HTMLUListElement>;
+
+const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
   elementsRendered = 15,
   increment = elementsRendered,
   fallback,
@@ -100,28 +90,31 @@ const LazyList: FunctionComponent<PropsWithChildren<ScrollerProps>> = ({
     if (typeof window === "undefined") return;
     /* If list is still unchanged, return early since further calculations can only be done after it has been mounted */
     if (list == null) return;
+
     const element = containerRef.current;
     if (!element) return;
-    const parentOverflowing = findParent(element, isOverflowing);
+
+    const parentOverflowing = findOverflowingParent(element);
+
     /* Until parent has space for its children, keep adding them */
     if (!parentOverflowing) return addElementsToList();
+
     const handleScroll = () => onScroll(parentOverflowing);
+
     const elementToAddEvent = (() => {
       /* If found Root element return window reference */
       if (parentOverflowing?.parentElement == null) return window ?? null;
       return parentOverflowing;
     })();
+
     elementToAddEvent.addEventListener("scroll", handleScroll);
     window.addEventListener("resize", handleScroll);
+
     return () => {
       elementToAddEvent.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", handleScroll);
     };
   }, [addElementsToList, list, onScroll]);
-
-  useEffect(() => {
-    console.log("list", list);
-  }, [list]);
 
   return (
     <>
