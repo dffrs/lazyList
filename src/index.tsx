@@ -31,7 +31,7 @@ interface ScrollerProps extends HTMLProps<HTMLUListElement> {
   fallback?: ReactNode;
   backup?: (fn: () => void) => void;
 }
-const Scroller: FunctionComponent<PropsWithChildren<ScrollerProps>> = ({
+const LazyList: FunctionComponent<PropsWithChildren<ScrollerProps>> = ({
   elementsRendered = 15,
   increment = elementsRendered,
   fallback,
@@ -142,4 +142,6 @@ const Scroller: FunctionComponent<PropsWithChildren<ScrollerProps>> = ({
   );
 };
 
-export default memo(Scroller);
+LazyList.displayName = "LazyList";
+
+export default memo(LazyList);
