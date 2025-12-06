@@ -5,7 +5,6 @@ import {
   PropsWithChildren,
   ReactNode,
   isValidElement,
-  memo,
   useCallback,
   useEffect,
   useRef,
@@ -15,6 +14,7 @@ import {
 import { findOverflowingParent } from "./util";
 
 const DEFAULT_NUMBER_OF_ELEMENTS = 10;
+const MARGIN_OF_ERROR = 2; // px
 
 type LazyListProps = {
   /**
@@ -50,9 +50,10 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
   ...rest
 }) => {
   const [list, setList] = useState<ReactNode[] | null>(() => null);
+  const [isLoading, startTransition] = useTransition();
+
   const containerRef = useRef<HTMLUListElement>(null);
   const childrenRef = useRef(Children.toArray(children));
-  const [isLoading, startTransition] = useTransition();
 
   const addElementsToList = useCallback(() => {
     if (list == null || list.length === childrenRef.current.length) return;
@@ -76,8 +77,9 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
     (element: HTMLElement | null) => {
       if (!element) return;
       const { clientHeight, scrollHeight, scrollTop } = element;
-      /* Reached the bottom - use 2 instead of 1 to give 1px margin of error */
-      if (Math.abs(scrollHeight - scrollTop - clientHeight) < 2)
+
+      // reached the bottom - use 2 instead of 1 to give 1px margin of error
+      if (Math.abs(scrollHeight - scrollTop - clientHeight) < MARGIN_OF_ERROR)
         addElementsToList();
     },
     [addElementsToList],
@@ -88,10 +90,8 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
     backup(() => addElementsToList);
   }, [addElementsToList, backup]);
 
-  /* 
-    Initial render: 
-    Populate state with elements until elementsRender is reached.
-  */
+  // initial render:
+  // populate state with elements until elementsRender is reached.
   useEffect(() => {
     const childrenToRender: typeof list = [];
     childrenRef.current.some((child, index) => {
@@ -138,19 +138,10 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
 
   return (
     <>
-      <ul
-        ref={containerRef}
-        style={{
-          listStyle: "none",
-          width: "100%",
-          marginLeft: "0",
-          marginRight: "0",
-        }}
-        {...rest}
-      >
+      <ul ref={containerRef} {...rest}>
         {list}
       </ul>
-      {(isLoading && (fallback ?? <></>)) || <></>}
+      {isLoading && fallback ? fallback : null}
     </>
   );
 };
