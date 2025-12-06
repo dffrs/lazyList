@@ -14,16 +14,36 @@ import {
 } from "react";
 import { findOverflowingParent } from "./util";
 
+const DEFAULT_NUMBER_OF_ELEMENTS = 10;
+
 type LazyListProps = {
-  elementsRendered?: number;
+  /**
+   * Initial number of elements to render (10 by default).
+   * */
+  initialElements?: number;
+
+  /**
+   * Number of elements to append (initialElements by default).
+   * */
   increment?: number;
+
+  /**
+   * Since appending could be an expensive computation, a fallback element
+   * can be provided. Usefull for loading indicators.
+   * */
   fallback?: ReactNode;
+
+  /**
+   *
+   * TODO: Think about implementation
+   *
+   */
   backup?: (fn: () => void) => void;
 } & HTMLProps<HTMLUListElement>;
 
 const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
-  elementsRendered = 15,
-  increment = elementsRendered,
+  initialElements = DEFAULT_NUMBER_OF_ELEMENTS,
+  increment = initialElements,
   fallback,
   children,
   backup,
@@ -75,7 +95,7 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
   useEffect(() => {
     const childrenToRender: typeof list = [];
     childrenRef.current.some((child, index) => {
-      if (index > elementsRendered) return true;
+      if (index > initialElements) return true;
       childrenToRender.push(
         <li key={((isValidElement(child) && child["key"]) || null) ?? index}>
           {child}
@@ -84,7 +104,7 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
       return false;
     });
     setList(childrenToRender);
-  }, [children, elementsRendered]);
+  }, [children, initialElements]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
