@@ -11,10 +11,9 @@ import {
   useState,
   useTransition,
 } from "react";
-import { findOverflowingParent } from "./util";
+import { useHandleScroll } from "./util";
 
 const DEFAULT_NUMBER_OF_ELEMENTS = 10;
-const MARGIN_OF_ERROR = 2; // px
 
 type LazyListProps = {
   /**
@@ -52,7 +51,6 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
   const [list, setList] = useState<ReactNode[] | null>(() => null);
   const [isLoading, startTransition] = useTransition();
 
-  const containerRef = useRef<HTMLUListElement>(null);
   const childrenRef = useRef(Children.toArray(children));
 
   const addElementsToList = useCallback(() => {
@@ -73,17 +71,7 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
     });
   }, [increment, list]);
 
-  const onScroll = useCallback(
-    (element: HTMLElement | null) => {
-      if (!element) return;
-      const { clientHeight, scrollHeight, scrollTop } = element;
-
-      // reached the bottom - use 2 instead of 1 to give 1px margin of error
-      if (Math.abs(scrollHeight - scrollTop - clientHeight) < MARGIN_OF_ERROR)
-        addElementsToList();
-    },
-    [addElementsToList],
-  );
+  const ulRef = useHandleScroll<HTMLUListElement>(list, addElementsToList);
 
   useEffect(() => {
     if (!backup) return;
@@ -106,39 +94,9 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
     setList(childrenToRender);
   }, [children, initialElements]);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    /* If list is still unchanged, return early since further calculations can only be done after it has been mounted */
-    if (list == null) return;
-
-    const element = containerRef.current;
-    if (!element) return;
-
-    const parentOverflowing = findOverflowingParent(element);
-
-    /* Until parent has space for its children, keep adding them */
-    if (!parentOverflowing) return addElementsToList();
-
-    const handleScroll = () => onScroll(parentOverflowing);
-
-    const elementToAddEvent = (() => {
-      /* If found Root element return window reference */
-      if (parentOverflowing?.parentElement == null) return window ?? null;
-      return parentOverflowing;
-    })();
-
-    elementToAddEvent.addEventListener("scroll", handleScroll);
-    window.addEventListener("resize", handleScroll);
-
-    return () => {
-      elementToAddEvent.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
-    };
-  }, [addElementsToList, list, onScroll]);
-
   return (
     <>
-      <ul ref={containerRef} {...rest}>
+      <ul ref={ulRef} {...rest}>
         {list}
       </ul>
       {isLoading && fallback ? fallback : null}

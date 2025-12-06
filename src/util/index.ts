@@ -8,3 +8,5 @@ export const findOverflowingParent = (el: HTMLElement | null) => {
   }
   return null;
 };
+
+export { useHandleScroll } from "./useHandleScroll";
