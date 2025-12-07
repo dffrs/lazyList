@@ -84,7 +84,7 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
   useEffect(() => {
     const childrenToRender: typeof list = [];
     childrenRef.current.some((child, index) => {
-      if (index > initialElements) return true;
+      if (index >= initialElements) return true;
       childrenToRender.push(
         <li
           data-testid={`lazy-list-li-${index}`}
