@@ -6,7 +6,7 @@ export default defineConfig({
       framework: "react",
       bundler: "vite",
     },
-    specPattern: "src/**/*.cy.{ts,tsx}",
+    specPattern: "cypress/**/*.cy.{ts,tsx}",
     supportFile: "cypress/support/component.ts",
   },
 });

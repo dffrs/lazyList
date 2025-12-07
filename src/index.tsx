@@ -60,6 +60,7 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
         .slice(list.length, list.length + increment)
         .map((e, index) => (
           <li
+            data-testid={`lazy-list-li-${index}`}
             key={
               ((isValidElement(e) && e["key"]) || null) ?? list.length + index
             }
@@ -85,7 +86,10 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
     childrenRef.current.some((child, index) => {
       if (index > initialElements) return true;
       childrenToRender.push(
-        <li key={((isValidElement(child) && child["key"]) || null) ?? index}>
+        <li
+          data-testid={`lazy-list-li-${index}`}
+          key={((isValidElement(child) && child["key"]) || null) ?? index}
+        >
           {child}
         </li>,
       );
@@ -96,10 +100,12 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
 
   return (
     <>
-      <ul ref={ulRef} {...rest}>
+      <ul data-testid="lazy-list-ul" ref={ulRef} {...rest}>
         {list}
       </ul>
-      {isLoading && fallback ? fallback : null}
+      {isLoading && fallback ? (
+        <div data-testid="lazy-list-fallback">{fallback}</div>
+      ) : null}
     </>
   );
 };
