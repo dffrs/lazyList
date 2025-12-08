@@ -48,10 +48,27 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
   backup,
   ...rest
 }) => {
-  const [list, setList] = useState<ReactNode[] | null>(() => null);
-  const [isLoading, startTransition] = useTransition();
-
   const childrenRef = useRef(Children.toArray(children));
+
+  const [list, setList] = useState<ReactNode[]>(() => {
+    const childrenToRender: ReactNode[] = [];
+
+    childrenRef.current.some((child, index) => {
+      if (index >= initialElements) return true;
+      childrenToRender.push(
+        <li
+          data-testid={`lazy-list-li-${index}`}
+          key={((isValidElement(child) && child["key"]) || null) ?? index}
+        >
+          {child}
+        </li>,
+      );
+      return false;
+    });
+    return childrenToRender;
+  });
+
+  const [isLoading, startTransition] = useTransition();
 
   const addElementsToList = useCallback(() => {
     if (list == null || list.length === childrenRef.current.length) return;
@@ -78,25 +95,6 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
     if (!backup) return;
     backup(() => addElementsToList);
   }, [addElementsToList, backup]);
-
-  // initial render:
-  // populate state with elements until elementsRender is reached.
-  useEffect(() => {
-    const childrenToRender: typeof list = [];
-    childrenRef.current.some((child, index) => {
-      if (index >= initialElements) return true;
-      childrenToRender.push(
-        <li
-          data-testid={`lazy-list-li-${index}`}
-          key={((isValidElement(child) && child["key"]) || null) ?? index}
-        >
-          {child}
-        </li>,
-      );
-      return false;
-    });
-    setList(childrenToRender);
-  }, [children, initialElements]);
 
   return (
     <>
