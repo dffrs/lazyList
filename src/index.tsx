@@ -63,7 +63,7 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
         .slice(list.length, list.length + increment)
         .map((e, index) => (
           <li
-            data-testid={`lazy-list-li-${index}`}
+            data-testid={`lazy-list-li-${list.length + index}`}
             key={
               ((isValidElement(e) && e["key"]) || null) ?? list.length + index
             }
