@@ -11,7 +11,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { useHandleScroll } from "./util";
+import { addChildrenUntil, useHandleScroll } from "./util";
 
 const DEFAULT_NUMBER_OF_ELEMENTS = 10;
 
@@ -50,23 +50,9 @@ const LazyList: FunctionComponent<PropsWithChildren<LazyListProps>> = ({
 }) => {
   const childrenRef = useRef(Children.toArray(children));
 
-  const [list, setList] = useState<ReactNode[]>(() => {
-    const childrenToRender: ReactNode[] = [];
-
-    childrenRef.current.some((child, index) => {
-      if (index >= initialElements) return true;
-      childrenToRender.push(
-        <li
-          data-testid={`lazy-list-li-${index}`}
-          key={((isValidElement(child) && child["key"]) || null) ?? index}
-        >
-          {child}
-        </li>,
-      );
-      return false;
-    });
-    return childrenToRender;
-  });
+  const [list, setList] = useState<ReactNode[]>(() =>
+    addChildrenUntil(childrenRef.current, initialElements),
+  );
 
   const [isLoading, startTransition] = useTransition();
 
